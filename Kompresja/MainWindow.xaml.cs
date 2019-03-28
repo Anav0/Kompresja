@@ -1,8 +1,9 @@
-﻿
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows;
 
@@ -27,22 +28,15 @@ namespace Kompresja
             dataGrid2.ItemsSource = mDataGrid2Source;
         }
 
-        private void OpenTextFile(object sender, RoutedEventArgs e)
+        private void LoadFileToTable(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog();
+            var content = OpenTxtFile();
+            if (content == null) return;
 
-            dialog.FileName = "Document";
-            dialog.DefaultExt = ".txt";
-            dialog.Filter = "Text documents (.txt)|*.txt";
-
-            if (dialog.ShowDialog() == true)
-            {
-                string text = mLoadedText = File.ReadAllText(dialog.FileName, Encoding.GetEncoding("Windows-1250"));
-                dataGrid.ItemsSource = mProb.GetLetters(text);
-                uiEntropy.Text = mProb.CalculateEntropy(mLoadedText).ToString();
-                uiNumberOfCharacters.Text = mLoadedText.Length.ToString();
-
-            }
+            mLoadedText = content;
+            dataGrid.ItemsSource = mProb.GetLetters(content);
+            uiEntropy.Text = mProb.CalculateEntropy(mLoadedText).ToString();
+            uiNumberOfCharacters.Text = mLoadedText.Length.ToString();
         }
 
         private void Calculate(object sender, RoutedEventArgs e)
@@ -66,15 +60,7 @@ namespace Kompresja
 
         private void SaveFileTo(object sender, RoutedEventArgs e)
         {
-            var dialog = new SaveFileDialog();
-            dialog.FileName = "text";
-            dialog.DefaultExt = ".txt";
-            dialog.Filter = "Text documents (.txt)|*.txt";
-
-            if (dialog.ShowDialog() == true)
-            {
-                File.WriteAllText(dialog.FileName, mLoadedText);
-            }
+            SaveFile(mLoadedText);
         }
 
         private void GenerateByGivenChars(object sender, RoutedEventArgs e)
@@ -91,11 +77,84 @@ namespace Kompresja
         private void CalculateEntrropyForDataGrid(object sender, RoutedEventArgs e)
         {
             var entropy = 0d;
+            double sumOfProbability = 0;
             foreach (var letter in mDataGrid2Source)
             {
+                sumOfProbability += letter.Probability;
+
+                if (sumOfProbability > 1)
+                {
+                    MessageBox.Show("Suma prawdopodobieństw wystąpienia danych znaków nie może być większa od 1", "Błąd", MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                    return;
+                }
+
                 entropy += -letter.Probability * Math.Log(letter.Probability, 2);
             }
+
             iuDataGrid2Entropy.Text = entropy.ToString();
+        }
+
+        private void GenerateWords(object sender, RoutedEventArgs e)
+        {
+            var numberOfWords = 0;
+            var numberOfLetters = 0;
+            try
+            {
+                numberOfLetters = Convert.ToInt32(uiNumberOfLettersInWords.Text);
+                numberOfWords = Convert.ToInt32(uiNumberOfWordsToGenerate.Text);
+            }
+            catch (FormatException ex)
+            {
+                MessageBox.Show(ex.Message, "Zły format", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
+            SaveFile(new RandomTextGenerator().GenerateWords(numberOfWords, numberOfLetters));
+        }
+
+        private void SaveFile(string textToSave)
+        {
+            var dialog = new SaveFileDialog();
+            dialog.FileName = "text";
+            dialog.DefaultExt = ".txt";
+            dialog.Filter = "Text documents (.txt)|*.txt";
+
+            if (dialog.ShowDialog() == true)
+            {
+                File.WriteAllText(dialog.FileName, textToSave);
+            }
+        }
+        private void SaveFile(IEnumerable<string> textToSave)
+        {
+            var dialog = new SaveFileDialog();
+            dialog.FileName = "text";
+            dialog.DefaultExt = ".txt";
+            dialog.Filter = "Text documents (.txt)|*.txt";
+
+            if (dialog.ShowDialog() == true)
+            {
+                File.WriteAllLines(dialog.FileName, textToSave);
+            }
+        }
+        private string OpenTxtFile()
+        {
+            OpenFileDialog dialog = new OpenFileDialog();
+
+            dialog.FileName = "Document";
+            dialog.DefaultExt = ".txt";
+            dialog.Filter = "Text documents (.txt)|*.txt";
+
+            if (dialog.ShowDialog() == true)
+            {
+                return File.ReadAllText(dialog.FileName, Encoding.GetEncoding("Windows-1250"));
+            }
+
+            return null;
+        }
+
+        private void GenerateProbModelBasedOnFile(object sender, RoutedEventArgs e)
+        {
+            var words = OpenTxtFile().Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            
         }
     }
 }

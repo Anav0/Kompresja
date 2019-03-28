@@ -5,7 +5,40 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Kompresja"
         mc:Ignorable="d"
-        Title="KiK" Height="600" Width="950" WindowStartupLocation="CenterScreen">
+        Title="KiK" Height="600" Width="950" WindowStartupLocation="CenterScreen" x:Name="root">
+    <Window.Resources>
+        <Style TargetType="{x:Type FrameworkElement}" >
+            <Setter Property="Margin" Value="2"></Setter>
+        </Style>
+        <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type FrameworkElement}}">
+            <Setter Property="MinWidth" Value="100"></Setter>
+            <Setter Property="MaxWidth" Value="150"></Setter>
+
+            <Setter Property="Padding" Value="5"></Setter>
+
+        </Style>
+        <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type FrameworkElement}}">
+            <Setter Property="Padding" Value="5"></Setter>
+        </Style>
+        <Style TargetType="{x:Type TextBlock}" x:Key="Header1" BasedOn="{StaticResource {x:Type FrameworkElement}}">
+            <Setter Property="TextWrapping" Value="Wrap"></Setter>
+            <Setter Property="FontSize" Value="14"></Setter>
+            <Setter Property="Foreground" Value="#4A4A4A"></Setter>
+            <Setter Property="FontWeight" Value="DemiBold"></Setter>
+        </Style>
+        <Style TargetType="{x:Type StackPanel}" x:Key="Section" BasedOn="{StaticResource {x:Type FrameworkElement}}">
+            <Setter Property="Margin" Value="5 15 5 0"></Setter>
+        </Style>
+        <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type FrameworkElement}}">
+            <Setter Property="Padding" Value="5"></Setter>
+
+            <Setter Property="Background" Value="#7AC5CD"></Setter>
+            <Setter Property="Foreground" Value="WhiteSmoke"></Setter>
+            <Setter Property="BorderThickness" Value="1"></Setter>
+            <Setter Property="BorderBrush" Value="#708090"></Setter>
+            
+        </Style>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
@@ -20,7 +53,9 @@
         <!--Top menu-->
         <Menu Grid.Row="0">
             <MenuItem Header="Plik">
-                <MenuItem Header="Otwórz" Click="OpenTextFile" />
+                <MenuItem Header="Otwórz" Click="LoadFileToTable" />
+                <MenuItem Header="Utwórz model probabilistyczny na podstawie pliku" Click="GenerateProbModelBasedOnFile" />
+
                 <MenuItem Header="Generuj losowe znaki ascii" Click="GenerateRandomString" />
                 <MenuItem Header="Zapisz" Click="SaveFileTo" />
             </MenuItem>
@@ -59,87 +94,94 @@
         </StackPanel>
 
         <!--Side panel-->
-        <StackPanel Grid.Column="1" Grid.RowSpan="2">
+        <TabControl Grid.Column="1" Grid.RowSpan="2">
+            <TabItem Header="Lista1">
+                <StackPanel >
 
-            <!--Wyniki-->
-            <StackPanel Orientation="Vertical" Margin=" 0 10 0 0">
-                <TextBlock 
-                TextWrapping="Wrap" 
-                FontSize="14" 
-                Margin="5 10 5 5"
-                Foreground="#4A4A4A"
-                FontWeight="DemiBold">Wyniki</TextBlock>
+                    <!--Wyniki-->
+                    <StackPanel Orientation="Vertical" Style="{StaticResource Section}">
+                        <TextBlock 
+                            Style="{StaticResource Header1}">Wyniki</TextBlock>
 
-                <StackPanel Margin="5" Orientation="Horizontal">
-                    <TextBlock  Text="Entropia: "/>
-                    <TextBlock Name="uiEntropy" Text="nil"/>
+                        <StackPanel Margin="5" Orientation="Horizontal">
+                            <TextBlock  Text="Entropia: "/>
+                            <TextBlock Name="uiEntropy" Text="nil"/>
+                        </StackPanel>
+                        <StackPanel Margin="5" Orientation="Horizontal">
+                            <TextBlock  Text="Ilość znaków: "/>
+                            <TextBlock Name="uiNumberOfCharacters" Text="0"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!--Generowanie symboli z danego alfabetu-->
+                    <StackPanel Orientation="Vertical" Style="{StaticResource Section}">
+                        <TextBlock Style="{StaticResource Header1}">Generuj n symboli z alfabetu w miarę równym prawdopodobieństwem</TextBlock>
+
+                        <Grid >
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock  Grid.Row="0" Grid.Column="0"  Text="n"/>
+                            <TextBox  Grid.Row="0" Grid.Column="1" Name="uiNumberOfCharToGenerate" Text="1000"/>
+                            <TextBlock  Grid.Row="1" Grid.Column="0"  Text="Alfabet"/>
+                            <TextBox  Grid.Row="1" Grid.Column="1"  Name="uiCharToGenerate" Text="a b c d"/>
+                            <Button  Grid.Row="2" Grid.ColumnSpan="3" Click="GenerateByGivenChars">Generuj</Button>
+                        </Grid>
+                    </StackPanel>
+
+                    <!--Entropia dla danych symboli z określonym prawdopodobieństwem-->
+                    <StackPanel Orientation="Vertical" Style="{StaticResource Section}">
+                        <TextBlock 
+                              Style="{StaticResource Header1}">Wyliczanie entropi dla symboli z danym prawdopodobieństwem</TextBlock>
+                        <DataGrid 
+                            ItemsSource="{Binding mDataGrid2Source}"
+                            CanUserAddRows="True"
+                            CanUserDeleteRows="True"
+                            CanUserSortColumns="True"
+                            AutoGenerateColumns="false"
+                            x:Name="dataGrid2"
+                            Margin="5">
+
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Symbol" Binding="{Binding Name}" />
+                                <DataGridTextColumn Header="Prawdopodobieństwo" Binding="{Binding Probability}" />
+                            </DataGrid.Columns>
+
+                        </DataGrid>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock  Text="Entorpia: "/>
+                            <TextBlock Name="iuDataGrid2Entropy" Text="0"/>
+                        </StackPanel>
+                        <Button Click="CalculateEntrropyForDataGrid">Wylicz entropię dla datagrid</Button>
+                    </StackPanel>
+
                 </StackPanel>
-                <StackPanel Margin="5" Orientation="Horizontal">
-                    <TextBlock  Text="Ilość znaków: "/>
-                    <TextBlock Name="uiNumberOfCharacters" Text="0"/>
-                </StackPanel>
-            </StackPanel>
-            
-            <!--Generowanie symboli z danego alfabetu-->
-            <StackPanel Orientation="Vertical" Margin=" 0 10 0 0">
+            </TabItem>
+            <TabItem Header="Lista2">
+                <StackPanel Orientation="Vertical">
                     <TextBlock 
-                TextWrapping="Wrap" 
-                FontSize="14" 
-                Margin="5 10 5 5"
-                Foreground="#4A4A4A"
-                FontWeight="DemiBold">Generuj n symboli z alfabetu w miarę równym prawdopodobieństwem</TextBlock>
+                        Style="{StaticResource Header1}">Generuj n słów składających się z x liter polskiego alfabetu generowanych z równym prawdopodobieństwem</TextBlock>
 
-                    <Grid Margin="5">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        <TextBlock Margin="2" Padding="5" Grid.Row="0" Grid.Column="0"    Text="n"/>
-                        <TextBox Margin="2" Padding="5" Grid.Row="0" Grid.Column="1"  Width="100" Name="uiNumberOfCharToGenerate" Text="1000"/>
-                        <TextBlock Margin="2" Padding="5" Grid.Row="1" Grid.Column="0"  Text="Alfabet"/>
-                        <TextBox Margin="2" Padding="5" Grid.Row="1" Grid.Column="1"  Width="100" Name="uiCharToGenerate" Text="a b c d"/>
-                        <Button Margin="2" Padding="5" Grid.Row="2" Grid.ColumnSpan="3"  Click="GenerateByGivenChars">Generuj</Button>
-                    </Grid>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="n"></TextBlock>
+                        <TextBox Name="uiNumberOfWordsToGenerate" Text="200"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="x"></TextBlock>
+                        <TextBox Name="uiNumberOfLettersInWords" Text="4"/>
+                    </StackPanel>
+                    <Button Click="GenerateWords" Content="Generuj"></Button>
                 </StackPanel>
+               
+            </TabItem>
+        </TabControl>
 
-            <!--Entropia dla danych symboli z określonym prawdopodobieństwem-->
-            <StackPanel Orientation="Vertical" Margin=" 0 10 0 0">
-                <TextBlock 
-                TextWrapping="Wrap" 
-                FontSize="14" 
-                Margin="5 10 5 5"
-                Foreground="#4A4A4A"
-                FontWeight="DemiBold">Wyliczanie entropi dla symboli z danym prawdopodobieństwem</TextBlock>
-                <DataGrid 
-                ItemsSource="{Binding mDataGrid2Source}"
-                CanUserAddRows="True"
-                CanUserDeleteRows="True"
-                CanUserSortColumns="True"
-                AutoGenerateColumns="false"
-                x:Name="dataGrid2"
-                Margin="5">
-
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Symbol" Binding="{Binding Name}" />
-                        <DataGridTextColumn Header="Prawdopodobieństwo" Binding="{Binding Probability}" />
-                    </DataGrid.Columns>
-
-                </DataGrid>
-                <StackPanel Margin="5" Orientation="Horizontal">
-                    <TextBlock  Text="Entorpia: "/>
-                    <TextBlock Name="iuDataGrid2Entropy" Text="0"/>
-                </StackPanel>
-                <Button Padding="5" 
-                    Margin="5" 
-                    Click="CalculateEntrropyForDataGrid">Wylicz entropię dla datagrid</Button>
-            </StackPanel>
-            
-        </StackPanel>
 
 
     </Grid>
