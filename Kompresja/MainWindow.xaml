@@ -58,6 +58,8 @@
 
                 <MenuItem Header="Generuj losowe znaki ascii" Click="GenerateRandomString" />
                 <MenuItem Header="Zapisz" Click="SaveFileTo" />
+                <MenuItem Header="Huffman" Click="GenerateHuffman" />
+
             </MenuItem>
         </Menu>
 

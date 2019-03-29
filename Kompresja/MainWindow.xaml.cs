@@ -156,5 +156,10 @@ namespace Kompresja
             var words = OpenTxtFile().Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
             
         }
+
+        private void GenerateHuffman(object sender, RoutedEventArgs e)
+        {
+            new Probability().Huffman();
+        }
     }
 }

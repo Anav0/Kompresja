@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -57,6 +58,31 @@ namespace Kompresja
             }
 
             return Math.Round(entropy, 3);
+        }
+        public void Huffman()
+        {
+            StringBuilder tekst = new StringBuilder();
+            var rnd = new Random();
+            var znaki = new char[] { 'a', 'b', 'c', 'd', 'e' };
+            var prob = new double[] { 0.5, 0.1, 0.2, 0.1, 0.1, };
+
+            var dyst = new double[prob.Length];
+
+            dyst[0] = prob[0];
+
+            for (int i = 1; i < prob.Length; i++)
+            {
+                dyst[i] = dyst[i - 1] + prob[i];
+            }
+            for (int i = 0; i < 1000; i++)
+            {
+                var los = rnd.NextDouble();
+                var j = 0;
+                while (los > dyst[j]) j++;
+                tekst.Append(znaki[j]);
+            }
+
+            File.WriteAllText("test.txt", tekst.ToString());
         }
     }
 }
